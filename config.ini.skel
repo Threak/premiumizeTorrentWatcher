@@ -1,0 +1,13 @@
+[PREMIUMIZE]
+customerid =
+pin =
+
+[TORRENT]
+torrentfileslocation =
+downloaddirectory = 
+deletetorrentonsuccess = yes
+deletetorrentonduplicate = yes
+deletefinishedtorrent = yes
+
+[DOWNLOADS]
+hashes =
