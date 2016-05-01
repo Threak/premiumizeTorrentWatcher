@@ -82,7 +82,7 @@ def download_finished_torrents():
                 makedirs(download_finished)
             downloads = premiumize_api.list_urls_for_torrent_by_hash(download_hash)
             for download in downloads:
-                call(['aria2c', '-c', '-d', download_target, download])
+                call(['aria2c', '--file-allocation=falloc', '-c', '-d', download_target, download])
             rename(download_target, download_finished)
             if config['TORRENT'].getboolean('DeleteFinishedTorrent', fallback=True):
                 print('Deleting torrent:', folder_name)
