@@ -4,7 +4,8 @@ pin =
 
 [TORRENT]
 torrentfileslocation =
-downloaddirectory = 
+downloaddirectory =
+finisheddownloaddirectory =
 deletetorrentonsuccess = yes
 deletetorrentonduplicate = yes
 deletefinishedtorrent = yes

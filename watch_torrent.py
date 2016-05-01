@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from premiumize import premiumize_api as api
-from os import walk, remove, makedirs
+from os import walk, remove, makedirs, rename
 from os.path import join, exists
 from json import dumps
 from subprocess import call
@@ -31,6 +31,9 @@ def save_new_id(old_ids):
 
 def upload_torrent_from_folder():
     torrent_folder = config['TORRENT']['TorrentFilesLocation']
+    if not exists(torrent_folder):
+        makedirs(torrent_folder)
+
     while True:
         for (dirpath, dirnames, filenames) in walk(torrent_folder):
             for filename in filenames:
@@ -56,6 +59,13 @@ def upload_torrent_from_folder():
 
 def download_finished_torrents():
     download_folder = config['TORRENT']['DownloadDirectory']
+    if not exists(download_folder):
+        makedirs(download_folder)
+
+    finished_folder = config['TORRENT']['FinishedDownloadDirectory']
+    if not exists(finished_folder):
+        makedirs(finished_folder)
+
     while True:
         config.read(CONFIG_PATH)
         download_hash_list = config['DOWNLOADS']['Hashes'].split(',')
@@ -65,11 +75,15 @@ def download_finished_torrents():
             if not folder_name:
                 continue
             download_target = join(download_folder, folder_name)
+            download_finished = join(finished_folder, folder_name)
             if not exists(download_target):
                 makedirs(download_target)
+            if not exists(download_finished):
+                makedirs(download_finished)
             downloads = premiumize_api.list_urls_for_torrent_by_hash(download_hash)
             for download in downloads:
                 call(['aria2c', '-c', '-d', download_target, download])
+            rename(download_target, download_finished)
             if config['TORRENT'].getboolean('DeleteFinishedTorrent', fallback=True):
                 print('Deleting torrent:', folder_name)
                 premiumize_api.delete_torrent_by_hash(download_hash)
