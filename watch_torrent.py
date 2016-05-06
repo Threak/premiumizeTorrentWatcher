@@ -21,7 +21,7 @@ def print_json(json):
     print(dumps(json, sort_keys=True, indent=4))
 
 def save_new_id(old_ids):
-    all_ids = premiumize_api.list_folder('hash')
+    all_ids = premiumize_api.list_items()
     new_ids = all_ids - old_ids
     if new_ids:
         new_id = new_ids.pop()
@@ -40,7 +40,7 @@ def upload_torrent_from_folder():
                 if filename.endswith('.torrent'):
                     filepath = join(dirpath, filename)
                     print('Now uploading: ', filename)
-                    old_folder_ids = premiumize_api.list_folder('hash')
+                    old_folder_ids = premiumize_api.list_items()
                     upload = premiumize_api.upload_torrent_file(filepath)
                     if upload['status'] == 'success':
                         print('Successfully uploaded: ' + filename)

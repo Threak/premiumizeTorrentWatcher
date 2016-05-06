@@ -9,7 +9,7 @@ class PremiumizeApi:
     def print_usage(self):
         print('hello')
 
-    def current_transfers(self):
+    def list_transfers(self):
         api_path = '/api/transfer/list'
         response = self.post_to_api(api_path)
         return response
@@ -20,7 +20,7 @@ class PremiumizeApi:
         return response
 
     def get_transfer_status_for_hash(self, transfer_hash):
-        transfers = self.current_transfers()
+        transfers = self.list_transfers()
         if transfers['status'] == 'success':
             for transfer in transfers['transfers']:
                 if transfer['hash'] == transfer_hash:
@@ -70,14 +70,24 @@ class PremiumizeApi:
                 if download.get('hash') == download_hash:
                     return download['name']
 
-    def list_folder(self, what):
+    def list_items(self, where='transfers', what='hash'):
         uploaded_ids = set()
-        folder_response = self.list_folders()
-        if folder_response['status'] == 'success':
-            folders = folder_response['content']
+
+        if where == 'folders':
+            response = self.list_folders()
+            data = 'content'
+        elif where == 'transfers':
+            response = self.list_transfers()
+            data = 'transfers'
+        else:
+            return uploaded_ids
+
+        if response['status'] == 'success':
+            folders = response[data]
             for i in (folder.get(what) for folder in folders):
                 if i:
                     uploaded_ids.add(i)
+
         return uploaded_ids
 
     def download_finished_torrent_by_id(self, download_id):
