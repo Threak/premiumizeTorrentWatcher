@@ -100,8 +100,15 @@ class PremiumizeApi:
         if torrent['status'] == 'success':
             for folder_key in torrent['content'].keys():
                 content = torrent['content'][folder_key]
-                for key in content['children'].keys():
-                    urls.add(content['children'][key].get('url'))
+                url = content.get('url')
+                if url:
+                    urls.add(url)
+                children = content.get('children')
+                if children:
+                    for key in children.keys():
+                        url = content['children'][key].get('url')
+                        if url:
+                            urls.add(url)
         return urls
 
     def browse_torrent_by_hash(self, download_hash):
