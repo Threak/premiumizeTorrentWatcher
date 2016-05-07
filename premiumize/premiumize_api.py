@@ -90,13 +90,6 @@ class PremiumizeApi:
 
         return uploaded_ids
 
-    def download_finished_torrent_by_id(self, download_id):
-        download_hash = self.get_hash_for_id(download_id)
-        self.download_finished_torrent_by_hash(download_hash)
-
-    def download_finished_torrent_by_hash(self, download_hash):
-        pass
-
     def list_urls_for_torrent_by_id(self, download_id):
         download_hash = self.get_hash_for_id(download_id)
         self.list_urls_for_torrent_by_hash(download_hash)
