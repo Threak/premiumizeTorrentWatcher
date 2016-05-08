@@ -98,17 +98,19 @@ class PremiumizeApi:
         torrent = self.browse_torrent_by_hash(download_hash)
         urls = set()
         if torrent['status'] == 'success':
-            for folder_key in torrent['content'].keys():
-                content = torrent['content'][folder_key]
-                url = content.get('url')
-                if url:
-                    urls.add(url)
-                children = content.get('children')
-                if children:
-                    for key in children.keys():
-                        url = content['children'][key].get('url')
-                        if url:
-                            urls.add(url)
+            urls |= self._urls_for_child(torrent['content'])
+        return urls
+
+    def _urls_for_child(self, children):
+        urls = set()
+        for key in children.keys():
+            child = children[key]
+            url = child.get('url')
+            if url:
+                urls.add(url)
+            new_children = child.get('children')
+            if new_children:
+                    urls |= self._urls_for_child(new_children)
         return urls
 
     def browse_torrent_by_hash(self, download_hash):
