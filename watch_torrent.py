@@ -20,14 +20,10 @@ premiumize_api = api.PremiumizeApi(config['PREMIUMIZE']['CustomerId'], config['P
 def print_json(json):
     print(dumps(json, sort_keys=True, indent=4))
 
-def save_new_id(old_ids):
-    all_ids = premiumize_api.list_items()
-    new_ids = all_ids - old_ids
-    if new_ids:
-        new_id = new_ids.pop()
-        config.read(CONFIG_PATH)
-        config['DOWNLOADS']['Hashes'] = config['DOWNLOADS']['Hashes'] + ',' + new_id
-        save_config_file()
+def save_new_id(new_id):
+    config.read(CONFIG_PATH)
+    config['DOWNLOADS']['Hashes'] = config['DOWNLOADS']['Hashes'] + ',' + new_id
+    save_config_file()
 
 def upload_torrent_from_folder():
     torrent_folder = config['TORRENT']['TorrentFilesLocation']
@@ -40,17 +36,16 @@ def upload_torrent_from_folder():
                 if filename.endswith('.torrent'):
                     filepath = join(dirpath, filename)
                     print('Now uploading: ', filename)
-                    old_folder_ids = premiumize_api.list_items()
                     upload = premiumize_api.upload_torrent_file(filepath)
                     if upload['status'] == 'success':
                         print('Successfully uploaded: ' + filename)
-                        save_new_id(old_folder_ids)
+                        save_new_id(upload['id'])
                         if config['TORRENT'].getboolean('DeleteTorrentOnSuccess', fallback=True):
                             remove(filepath)
                     else:
                         print('Error:', upload['message'], 'in file', filename)
                         if upload['message'] == 'This torrent is already in the download list.':
-                            save_new_id(old_folder_ids)
+                            # save_new_id(upload['id']) not yet implemented by API
                             if config['TORRENT'].getboolean('DeleteTorrentOnDuplicate', fallback=True):
                                 print('Deleting already existing torrent: ' + filename)
                                 remove(filepath)
