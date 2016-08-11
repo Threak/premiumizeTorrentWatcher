@@ -57,8 +57,10 @@ def upload_torrent_from_folder():
                                 if config['TORRENT'].getboolean('DeleteTorrentOnDuplicate', fallback=True):
                                     print('Deleting already existing torrent: ' + filename)
                                     remove(error_filepath)
+                        else:
+                            print('Error:', 'unknown (no message)', 'in file', filename)
 
-                print()
+                    print()
         time.sleep(10)
 
 def download_finished_torrents():
@@ -84,11 +86,11 @@ def download_finished_torrents():
             download_finished = join(finished_folder, folder_name)
             if not exists(download_target):
                 makedirs(download_target)
-            if not exists(download_finished):
-                makedirs(download_finished)
             downloads = premiumize_api.list_urls_for_torrent_by_hash(download_hash)
             for download in downloads:
                 call(['aria2c', '--file-allocation=falloc', '-c', '-d', download_target, download])
+            if not exists(download_finished):
+                makedirs(download_finished)
             rename(download_target, download_finished)
             if config['TORRENT'].getboolean('DeleteFinishedTorrent', fallback=True):
                 print('Deleting torrent:', folder_name)
