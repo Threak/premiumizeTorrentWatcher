@@ -127,8 +127,9 @@ class PremiumizeApi:
         return response
 
     def send_magnet_link(self, magnet_link):
-        print('Sending link: {}'.format(magnet_link))
-        return {}
+        api_path = '/api/transfer/create?type=torrent&src={}'.format(magnet_link)
+        response = self.post_to_api(api_path)
+        return response
 
     def post_to_api(self, path, files={}):
         host = 'https://www.premiumize.me'
