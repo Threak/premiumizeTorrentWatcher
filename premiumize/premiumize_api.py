@@ -126,6 +126,10 @@ class PremiumizeApi:
         response = self.post_to_api(api_path, files)
         return response
 
+    def send_magnet_link(self, magnet_link):
+        print('Sending link: {}'.format(magnet_link))
+        return {}
+
     def post_to_api(self, path, files={}):
         host = 'https://www.premiumize.me'
         params = {

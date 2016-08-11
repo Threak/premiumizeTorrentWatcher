@@ -2,20 +2,16 @@
 
 from premiumize import premiumize_api as api
 from os import walk, remove, makedirs, rename
-from os.path import join, exists
+from os.path import join, exists, expanduser, dirname
+from shutil import copyfile
 from json import dumps
 from subprocess import call
 import configparser
 import threading
 import time
+import sys
 
-CONFIG_PATH = 'config.ini'
-config = configparser.ConfigParser()
-config.read(CONFIG_PATH)
-
-UPLOADED_IDS = set()
-
-premiumize_api = api.PremiumizeApi(config['PREMIUMIZE']['CustomerId'], config['PREMIUMIZE']['Pin'])
+CONFIG_PATH = expanduser('~/.ptw/ptw_config.ini')
 
 def print_json(json):
     print(dumps(json, sort_keys=True, indent=4))
@@ -27,28 +23,41 @@ def save_new_id(new_id):
 
 def upload_torrent_from_folder():
     torrent_folder = config['TORRENT']['TorrentFilesLocation']
+
     if not exists(torrent_folder):
         makedirs(torrent_folder)
+
+    print('Watching for new *.torrent and *.magnet files in {}'.format(torrent_folder))
 
     while True:
         for (dirpath, dirnames, filenames) in walk(torrent_folder):
             for filename in filenames:
-                if filename.endswith('.torrent'):
+                if filename.endswith('.torrent') or filename.endswith('.magnet'):
                     filepath = join(dirpath, filename)
                     print('Now uploading: ', filename)
-                    upload = premiumize_api.upload_torrent_file(filepath)
-                    if upload['status'] == 'success':
+                    if filename.endswith('.torrent'):
+                        upload = premiumize_api.upload_torrent_file(filepath)
+                    else:
+                        with open(filepath, 'r') as magnet_file:
+                            upload = premiumize_api.send_magnet_link(magnet_file.read())
+                    if 'status' in upload and upload['status'] == 'success':
                         print('Successfully uploaded: ' + filename)
                         save_new_id(upload['id'])
                         if config['TORRENT'].getboolean('DeleteTorrentOnSuccess', fallback=True):
                             remove(filepath)
+                        else:
+                            rename(filepath, '{}.done'.format(filepath))
                     else:
-                        print('Error:', upload['message'], 'in file', filename)
-                        if upload['message'] == 'This torrent is already in the download list.':
-                            # save_new_id(upload['id']) not yet implemented by API
-                            if config['TORRENT'].getboolean('DeleteTorrentOnDuplicate', fallback=True):
-                                print('Deleting already existing torrent: ' + filename)
-                                remove(filepath)
+                        error_filepath = '{}.error'.format(filepath)
+                        rename(filepath, error_filepath)
+                        if 'message' in upload:
+                            print('Error:', upload['message'], 'in file', filename)
+                            if upload['message'] == 'This torrent is already in the download list.':
+                                # save_new_id(upload['id']) not yet implemented by API
+                                if config['TORRENT'].getboolean('DeleteTorrentOnDuplicate', fallback=True):
+                                    print('Deleting already existing torrent: ' + filename)
+                                    remove(error_filepath)
+
                 print()
         time.sleep(10)
 
@@ -60,6 +69,8 @@ def download_finished_torrents():
     finished_folder = config['TORRENT']['FinishedDownloadDirectory']
     if not exists(finished_folder):
         makedirs(finished_folder)
+
+    print('Downloading finished torrent to {}, moving to {} on success.'.format(download_folder, finished_folder))
 
     while True:
         config.read(CONFIG_PATH)
@@ -93,6 +104,21 @@ def download_finished_torrents():
 def save_config_file():
     with open(CONFIG_PATH, 'w') as configfile:
         config.write(configfile)
+
+config_folder = dirname(CONFIG_PATH)
+if not exists(config_folder):
+    makedirs(config_folder)
+
+if not exists(CONFIG_PATH):
+    copyfile('./config.ini.skel', CONFIG_PATH)
+    print("A new config file in {} has been created.".format(CONFIG_PATH))
+    print("Please add your login info and paths")
+    sys.exit(-1)
+
+config = configparser.ConfigParser()
+config.read(CONFIG_PATH)
+
+premiumize_api = api.PremiumizeApi(config['PREMIUMIZE']['CustomerId'], config['PREMIUMIZE']['Pin'])
 
 upload = threading.Thread(target=upload_torrent_from_folder)
 upload.start()
