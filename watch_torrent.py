@@ -110,7 +110,8 @@ if not exists(config_folder):
     makedirs(config_folder)
 
 if not exists(CONFIG_PATH):
-    copyfile('./config.ini.skel', CONFIG_PATH)
+    config_skel_path = join(dirname(__file__), 'config.ini.skel')
+    copyfile(config_skel_path, CONFIG_PATH)
     print("A new config file in {} has been created.".format(CONFIG_PATH))
     print("Please add your login info and paths")
     sys.exit(-1)
