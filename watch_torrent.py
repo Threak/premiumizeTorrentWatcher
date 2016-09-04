@@ -88,7 +88,7 @@ def download_finished_torrents():
                 makedirs(download_target)
             downloads = premiumize_api.list_urls_for_torrent_by_hash(download_hash)
             for download in downloads:
-                call(['aria2c', '--file-allocation=falloc', '-c', '-d', download_target, download])
+                call(['aria2c', '--file-allocation=falloc', '--show-console-readout=false', '-c', '-d', download_target, download])
             if not exists(download_finished):
                 makedirs(download_finished)
             rename(download_target, download_finished)
