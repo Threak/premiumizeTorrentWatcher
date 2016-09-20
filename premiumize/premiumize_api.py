@@ -138,4 +138,9 @@ class PremiumizeApi:
             'pin': self.pin
         }
         request = requests.post(host + path, params=params, files=files)
-        return json.loads(request.text)
+        if request.status_code == requests.codes.ok and request.text:
+            return json.loads(request.text)
+        else:
+            print('Error:', request, request.text, )
+            json.loads(request.text)
+            return ''
