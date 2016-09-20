@@ -138,9 +138,9 @@ class PremiumizeApi:
             'pin': self.pin
         }
         request = requests.post(host + path, params=params, files=files)
-        if request.status_code == requests.codes.ok and request.text:
+        if request.status_code == requests.codes.ok:
             return json.loads(request.text)
         else:
-            print('Error:', request, request.text, )
-            json.loads(request.text)
+            # TODO: handle 502 bad gateway from cloudflare
+            print('Error:', request, )
             return ''
