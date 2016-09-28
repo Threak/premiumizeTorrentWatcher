@@ -65,7 +65,7 @@ class PremiumizeApi:
 
     def get_folder_name_for_torrent_by_hash(self, download_hash):
         folder_list = self.list_folders()
-        if folder_list['status'] == 'success':
+        if folder_list and folder_list['status'] == 'success':
             for download in folder_list['content']:
                 if download.get('hash') == download_hash:
                     return download['name']
@@ -143,4 +143,4 @@ class PremiumizeApi:
         else:
             # TODO: handle 502 bad gateway from cloudflare
             print('Error:', request, )
-            return ''
+            return
