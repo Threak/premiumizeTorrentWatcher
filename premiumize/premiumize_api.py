@@ -137,10 +137,16 @@ class PremiumizeApi:
             'customer_id': self.customer_id,
             'pin': self.pin
         }
-        request = requests.post(host + path, params=params, files=files)
+        try:
+            request = requests.post(host + path, params=params, files=files)
+            request.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            # TODO: handle specific errors like: requests.exceptions.ConnectionError 104
+            print('Error requests:', e, )
+            return
         if request.status_code == requests.codes.ok:
             return json.loads(request.text)
         else:
             # TODO: handle 502 bad gateway from cloudflare
-            print('Error:', request, )
+            print('Error no http ok:', request, )
             return
