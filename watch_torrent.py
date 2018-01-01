@@ -2,7 +2,7 @@
 
 from premiumize import premiumize_api as api
 from os import walk, remove, makedirs, rename
-from os.path import join, exists, expanduser, dirname
+from os.path import join, exists, expanduser, dirname, join
 from shutil import copyfile
 from json import dumps
 from subprocess import call
@@ -18,7 +18,7 @@ def print_json(json):
 
 def save_new_id(new_id):
     config.read(CONFIG_PATH)
-    config['DOWNLOADS']['Hashes'] = config['DOWNLOADS']['Hashes'] + ',' + new_id
+    config['DOWNLOADS']['ids'] = config['DOWNLOADS']['ids'] + ',' + new_id
     save_config_file()
 
 def upload_torrent_from_folder():
@@ -76,30 +76,33 @@ def download_finished_torrents():
 
     while True:
         config.read(CONFIG_PATH)
-        download_hash_list = config['DOWNLOADS']['Hashes'].split(',')
-        finished_hash_list = set()
-        for download_hash in download_hash_list:
-            folder_name = premiumize_api.get_folder_name_for_torrent_by_hash(download_hash)
+        download_id_list = config['DOWNLOADS']['ids'].split(',')
+        finished_id_list = set()
+        for download_id in download_id_list:
+            folder_name = premiumize_api.get_folder_name_for_torrent_by_id(download_id)
             if not folder_name:
                 continue
             download_target = join(download_folder, folder_name)
             download_finished = join(finished_folder, folder_name)
             if not exists(download_target):
                 makedirs(download_target)
-            downloads = premiumize_api.list_urls_for_torrent_by_hash(download_hash)
-            for download in downloads:
-                call(['aria2c', '--file-allocation=falloc', '--show-console-readout=false', '-c', '-d', download_target, download])
+            downloads = premiumize_api.list_urls_for_torrent_by_id(download_id)
+            for file in downloads:
+                call([
+                    'aria2c', '--file-allocation=falloc', '--show-console-readout=false', '-c',
+                    '-d', join(download_target, file['path']), file['url']
+                    ])
             if not exists(download_finished):
                 makedirs(download_finished)
             rename(download_target, download_finished)
             if config['TORRENT'].getboolean('DeleteFinishedTorrent', fallback=True):
                 print('Deleting torrent:', folder_name)
-                premiumize_api.delete_torrent_by_hash(download_hash)
-            finished_hash_list.add(download_hash)
+                premiumize_api.delete_torrent_by_id(download_id)
+            finished_id_list.add(download_id)
             config.read(CONFIG_PATH)
-            new_download_hash_list = config['DOWNLOADS']['Hashes'].split(',')
-            remaining_hash_list = set(new_download_hash_list) - finished_hash_list
-            config['DOWNLOADS']['Hashes'] = ','.join(remaining_hash_list)
+            new_download_id_list = config['DOWNLOADS']['ids'].split(',')
+            remaining_id_list = set(new_download_id_list) - finished_id_list
+            config['DOWNLOADS']['ids'] = ','.join(remaining_id_list)
             save_config_file()
         time.sleep(30)
 

@@ -11,4 +11,4 @@ deletetorrentonduplicate = yes
 deletefinishedtorrent = yes
 
 [DOWNLOADS]
-hashes =
+ids =
